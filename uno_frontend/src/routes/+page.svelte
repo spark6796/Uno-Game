@@ -8,7 +8,7 @@ const api = import.meta.env.VITE_BACKEND_API
 const site_key = import.meta.env.VITE_TURNSTILE_SITE_KEY
 const protocol = import.meta.env.VITE_SSL_BOOL == 'TRUE' ? 'https' : 'http';
 const pfp_list = Array.from({length: 5 + 1}, (_, i) => `pfp/${i}.jpg`);
-let current_pfp = $state(pfp_list[Math.floor(Math.random()*pfp_list.length)]);
+let current_pfp = pfp_list[Math.floor(Math.random()*pfp_list.length)];
 let scriptLoaded = false
 
 
@@ -58,11 +58,11 @@ async function public_main(){
     try {
         let session = sessionStorage.getItem('sessionid')
         const apiUrl = `${protocol}://${api}/public_join`;
-        
         const response = await fetch(apiUrl,
             {
                 method:'POST',
-                session
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({session_id:session})
             }
         );
         
@@ -91,8 +91,8 @@ async function private_join(){
         const response = await fetch(apiUrl,
             {
                 method:'POST',
-                session,
-                game_id
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({session_id:session,game_id})
             }
         );
         if(response.status == 200){
@@ -115,7 +115,8 @@ async function private_create(){
         const response = await fetch(apiUrl,
             {
                 method:'POST',
-                session
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({session_id:session})
             }
         );
         if(response.status == 200){
@@ -188,6 +189,7 @@ async function Start(event){
         return
     }
     let main_container = document.getElementById('main')
+    let logo_container = document.getElementById('logo').classList.add('blur-lg')
     let main_container_class = main_container?.classList
     let room_selector = document.getElementById('room_selector')
     let room_selector_class = room_selector?.classList           
@@ -212,29 +214,29 @@ onMount(() => {
 <div class="flex-col justify-center bg-[#5472E4] h-screen w-full overflow-hidden hidden appwidth:flex">
     <div id="room_selector" class="absolute z-40 h-1/3 w-full hidden">
             <div class="flex rounded-2xl shadow-lg w-1/2 h-full bg-blue-600 mx-auto items-center">
-                <button onclick={()=>public_main} class="border-4 border-green-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-green-400 text-black font-bold hover:border-green-600 shadow-lg shadow-blue-400">Public</button>
-                <button onclick={()=>private_main} class="border-4 border-yellow-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-yellow-400 text-black font-bold hover:border-yellow-600 shadow-lg shadow-blue-400">Private</button>
+                <button onclick={()=>public_main()} class="border-4 border-green-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-green-400 text-black font-bold hover:border-green-600 shadow-lg shadow-blue-400">Public</button>
+                <button onclick={()=>private_main()} class="border-4 border-yellow-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-yellow-400 text-black font-bold hover:border-yellow-600 shadow-lg shadow-blue-400">Private</button>
             </div>
     </div>
 
     <div id="private_selector" class="absolute z-40 h-1/3 w-full hidden">
         <div class="flex rounded-2xl shadow-lg w-1/2 h-full bg-blue-600 mx-auto items-center">
-            <button onclick={()=>private_join} class="border-4 border-green-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-green-400 text-black font-bold hover:border-green-600 shadow-lg shadow-blue-400">Join</button>
-            <button onclick={()=>private_create} class="border-4 border-yellow-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-yellow-400 text-black font-bold hover:border-yellow-600 shadow-lg shadow-blue-400">Create</button>
+            <button onclick={()=>private_join()} class="border-4 border-green-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-green-400 text-black font-bold hover:border-green-600 shadow-lg shadow-blue-400">Join</button>
+            <button onclick={()=>private_create()} class="border-4 border-yellow-400 mx-auto h-1/3 w-1/3 rounded-2xl text-4xl bg-yellow-400 text-black font-bold hover:border-yellow-600 shadow-lg shadow-blue-400">Create</button>
         </div>
 </div>
 
 <div class="flex flex-row h-full w-full top-0 overflow-hidden"> 
-    <div class="flex items-center justify-center h-full w-1/2">
+    <div id="logo" class="flex items-center justify-center h-full w-1/2">
         <img alt="Alt" src="/bg.png" class="h-2/3 rounded-2xl w-full"/>
     </div>
     <div class="flex justify-center items-center h-full w-1/2 ">
         <div id="main" class="w-1/2 border-2 py-8 rounded-lg bg-[#3E63DD] border-[#435DB1] shadow-xl opacity-0 hidden appwidth:block">
             <div id="main_elements" class="h-full w-full flex flex-col gap-8 justify-center items-center opacity-0">
                 <div class="flex w-1/2 justify-center items-center">
-                    <button onclick={()=>{pfp_change('left')}} class="text-5xl font-extrabold text-blue-100 animate-pulse hover:text-stone-300 mr-auto h-fit">&lt;</button>
+                    <button onclick={()=>pfp_change('left')} class="text-5xl font-extrabold text-blue-100 animate-pulse hover:text-stone-300 mr-auto h-fit">&lt;</button>
                     <img alt="pfp" src={current_pfp} class="border-4 size-32 rounded-full border-blue-500"/>
-                    <button onclick={()=>{pfp_change('right')}} class="text-5xl font-extrabold text-blue-100 animate-pulse hover:text-stone-300 ml-auto h-fit">&gt;</button>
+                    <button onclick={()=>pfp_change('right')} class="text-5xl font-extrabold text-blue-100 animate-pulse hover:text-stone-300 ml-auto h-fit">&gt;</button>
             </div>
             <form onsubmit={Start} class="flex flex-col items-center gap-6">
                 <input id="name" required  maxlength="12" placeholder="Guest" class="bg-transparent focus:bg-none placeholder-opacity-60 placeholder-white text-2xl focus:outline-none text-white border-b-2 border-blue-300 w-2/3"/>
